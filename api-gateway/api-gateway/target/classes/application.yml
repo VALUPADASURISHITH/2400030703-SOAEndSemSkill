@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Route 1: Using RewritePath filter
+        # Clients call public endpoint /accounts/** -> Rewritten to /internal/accounts/**
+        - id: account-service-rewrite-route
+          uri: http://localhost:8081
+          predicates:
+            - Path=/accounts/**
+          filters:
+            - RewritePath=/accounts(?<segment>/?.*), /internal/accounts$\{segment}
+
+        # Route 2: Using StripPrefix filter
+        # Clients call public endpoint /gateway/internal/accounts/** -> First prefix (/gateway) stripped -> /internal/accounts/**
+        - id: account-service-stripprefix-route
+          uri: http://localhost:8081
+          predicates:
+            - Path=/gateway/internal/accounts/**
+          filters:
+            - StripPrefix=1
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
